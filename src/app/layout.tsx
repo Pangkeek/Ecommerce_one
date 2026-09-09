@@ -1,0 +1,3 @@
+import type { Metadata } from "next"; import "./globals.css"; import { StoreProvider } from "@/components/store-provider"; import { Header } from "@/components/header"; import { CartDrawer } from "@/components/cart-drawer"; import { Footer } from "@/components/footer";
+export const metadata:Metadata={title:{default:"Sunshine Whitening",template:"%s · Sunshine Whitening"},description:"สบู่ทำมือสำหรับทุกวัน — a local ecommerce demo."};
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="th"><body><StoreProvider><Header/><main id="main-content">{children}</main><Footer/><CartDrawer/></StoreProvider></body></html>}
