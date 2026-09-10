@@ -1,4 +1,16 @@
-"use client";
-import { useState } from "react"; import { LogOut, Package, UserRound } from "lucide-react"; import { useStore } from "@/components/store-provider"; import { Button, Input } from "@/components/ui";
-export default function Account(){const {locale,signedIn,setSignedIn}=useStore();const [mode,setMode]=useState<"login"|"register">("login"); if(signedIn)return <section className="account-page"><div className="account-title"><span className="avatar"><UserRound/></span><div><span className="kicker">{locale==="th"?"บัญชีทดลอง":"Demo account"}</span><h1>{locale==="th"?"สวัสดี คุณซันไชน์":"Hello, Sunshine"}</h1></div><Button variant="outline" onClick={()=>setSignedIn(false)}><LogOut/>{locale==="th"?"ออกจากระบบ":"Sign out"}</Button></div><div className="account-grid"><article><Package/><h2>{locale==="th"?"คำสั่งซื้อล่าสุด":"Recent orders"}</h2><p>{locale==="th"?"คำสั่งซื้อทดลองจะปรากฏที่นี่เมื่อเชื่อมต่อฐานข้อมูล":"Demo orders will appear here once a database is connected."}</p></article><article><UserRound/><h2>{locale==="th"?"ที่อยู่ของคุณ":"Saved addresses"}</h2><p>{locale==="th"?"ยังไม่มีที่อยู่ที่บันทึกไว้":"No saved addresses yet."}</p></article></div></section>;
- return <section className="auth-page"><div className="auth-art"><span>S</span><p>small rituals,<br/>beautiful days.</p></div><form onSubmit={e=>{e.preventDefault();setSignedIn(true)}}><span className="kicker">{locale==="th"?"บัญชีซันไชน์":"Sunshine account"}</span><h1>{mode==="login"?(locale==="th"?"ยินดีต้อนรับกลับ":"Welcome back"):(locale==="th"?"สร้างบัญชี":"Create an account")}</h1><p>{locale==="th"?"นี่คือโหมดทดลอง ข้อมูลจะถูกเก็บไว้ในอุปกรณ์นี้เท่านั้น":"Demo mode stores account state on this device only."}</p>{mode==="register"&&<Input required placeholder={locale==="th"?"ชื่อของคุณ":"Your name"}/>}<Input required type="email" placeholder="Email"/><Input required type="password" minLength={6} placeholder={locale==="th"?"รหัสผ่าน":"Password"}/><Button type="submit">{mode==="login"?(locale==="th"?"เข้าสู่ระบบทดลอง":"Demo sign in"):(locale==="th"?"สร้างบัญชีทดลอง":"Create demo account")}</Button><button type="button" className="text-link" onClick={()=>setMode(mode==="login"?"register":"login")}>{mode==="login"?(locale==="th"?"ยังไม่มีบัญชี? สมัครสมาชิก":"New here? Create an account"):(locale==="th"?"มีบัญชีแล้ว? เข้าสู่ระบบ":"Already have an account? Sign in")}</button></form></section>}
+import { createServerSupabase } from "@/lib/supabase/server";
+import { AccountPanel } from "@/components/account-panel";
+import type { StoreOrder } from "@/lib/order-types";
+
+export default async function Account({searchParams}:{searchParams:Promise<{auth_error?:string}>}) {
+ const supabase=await createServerSupabase();const {data:{user}}=await supabase.auth.getUser();
+ const query=await searchParams;
+ if(!user)return <AccountPanel user={null} isAdmin={false} orders={[]} address={{}} loadError={false} authError={!!query.auth_error}/>;
+ const [profile,orders,admin]=await Promise.all([
+  supabase.from("profiles").select("full_name,address").eq("id",user.id).maybeSingle(),
+  supabase.from("orders").select("id,email,status,total_satang,created_at,shipping_address,order_items(product_id,variant_id,name,label,quantity,unit_price_satang)").eq("user_id",user.id).order("created_at",{ascending:false}).limit(50),
+  supabase.rpc("is_store_admin"),
+ ]);
+ return <AccountPanel user={{email:user.email||"",name:profile.data?.full_name||user.user_metadata?.full_name||""}} isAdmin={admin.data===true}
+ orders={(orders.data||[]) as StoreOrder[]} address={profile.data?.address||{}} loadError={!!profile.error||!!orders.error} authError={!!query.auth_error}/>;
+}

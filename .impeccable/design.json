@@ -1,0 +1,21 @@
+{
+  "surface": "homepage",
+  "mode": "persuade",
+  "world": "sunlit apothecary counter",
+  "tokens": {
+    "ink": "#331e29",
+    "rose": "#e56b8d",
+    "deepRose": "#a83259",
+    "blush": "#fff0f4",
+    "petal": "#f3c1cc",
+    "butterLight": "#f4c471",
+    "mineralStone": "#eadbd4",
+    "milkWhite": "#fffdfb",
+    "border": "#ead9dd",
+    "font": "Sunshine / Sunshine Thai"
+  },
+  "signatureInteraction": "A slow sun marker orbits over the hero photograph and follows pointer movement on desktop.",
+  "responsive": "The hero becomes a stacked product tray on mobile; the story panel becomes a vertical image-then-copy flow; admin navigation becomes a compact mobile row.",
+  "adminSurface": "Deep plum navigation anchors a warm paper workspace for fast catalog, inventory, and order operations.",
+  "accessibility": ["visible keyboard focus", "Thai and English copy", "reduced-motion support", "4.5:1 body text contrast"]
+}

@@ -1,3 +1,13 @@
 import type { Metadata } from "next"; import "./globals.css"; import { StoreProvider } from "@/components/store-provider"; import { Header } from "@/components/header"; import { CartDrawer } from "@/components/cart-drawer"; import { Footer } from "@/components/footer";
+import { connection } from "next/server";
+import { getCatalog } from "@/lib/supabase/catalog";
+import { createServerSupabase } from "@/lib/supabase/server";
 export const metadata:Metadata={title:{default:"Sunshine Whitening",template:"%s · Sunshine Whitening"},description:"สบู่ทำมือสำหรับทุกวัน — a local ecommerce demo."};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="th"><body><StoreProvider><Header/><main id="main-content">{children}</main><Footer/><CartDrawer/></StoreProvider></body></html>}
+export default async function RootLayout({children}:{children:React.ReactNode}){
+ const connected=process.env.SUPABASE_CATALOG_ENABLED==="true";
+ if(connected)await connection();
+ const initialProducts=connected?await getCatalog().catch(()=>undefined):undefined;
+ const supabase=await createServerSupabase();
+ const {data:{user}}=await supabase.auth.getUser();
+ return <html lang="th"><body><StoreProvider initialProducts={initialProducts} signedIn={!!user}><Header/><main id="main-content">{children}</main><Footer/><CartDrawer/></StoreProvider></body></html>
+}

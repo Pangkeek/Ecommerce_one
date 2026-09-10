@@ -1,20 +1,36 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext,useContext,useEffect,useState } from "react";
 import { MotionPreferences } from "./motion-preferences";
-import type { CartLine, Locale, Product } from "@/lib/types";
-import { products as seedProducts } from "@/lib/data";
+import type { CartLine,Locale,Product } from "@/lib/types";
+import { products as seeds } from "@/lib/data";
 
-type Store = { locale:Locale; setLocale:(l:Locale)=>void; products:Product[]; setProducts:(p:Product[])=>void; cart:CartLine[]; add:(p:string,v:string)=>void; change:(p:string,v:string,q:number)=>void; clear:()=>void; cartCount:number; cartOpen:boolean; setCartOpen:(v:boolean)=>void; signedIn:boolean; setSignedIn:(v:boolean)=>void };
+type Store={locale:Locale;setLocale:(l:Locale)=>void;products:Product[];cart:CartLine[];add:(p:string,v:string,q?:number)=>void;change:(p:string,v:string,q:number)=>void;clear:()=>void;cartCount:number;cartOpen:boolean;setCartOpen:(open:boolean)=>void;signedIn:boolean;};
 const Context=createContext<Store|null>(null);
-export function StoreProvider({children}:{children:React.ReactNode}){
- const [locale,setLocaleState]=useState<Locale>("th"); const [products,setProductsState]=useState(seedProducts); const [cart,setCart]=useState<CartLine[]>([]); const [cartOpen,setCartOpen]=useState(false); const [signedIn,setSignedInState]=useState(false);
- useEffect(()=>{ const read=<T,>(k:string,f:T)=>{try{return JSON.parse(localStorage.getItem(k)||"") as T}catch{return f}}; const timer=window.setTimeout(()=>{setLocaleState(read("sw-locale","th"));setProductsState(read("sw-products",seedProducts));setCart(read("sw-cart",[]));setSignedInState(read("sw-auth",false))},0);return()=>window.clearTimeout(timer)},[]);
- const save=<T,>(key:string,setter:(v:T)=>void)=>(v:T)=>{setter(v);localStorage.setItem(key,JSON.stringify(v))};
- const setLocale=save<Locale>("sw-locale",setLocaleState), setProducts=save<Product[]>("sw-products",setProductsState), setSignedIn=save<boolean>("sw-auth",setSignedInState);
- const commit=(next:CartLine[])=>{setCart(next);localStorage.setItem("sw-cart",JSON.stringify(next))};
- const add=(productId:string,variantId:string)=>{const found=cart.find(x=>x.productId===productId&&x.variantId===variantId); commit(found?cart.map(x=>x===found?{...x,quantity:x.quantity+1}:x):[...cart,{productId,variantId,quantity:1}]);setCartOpen(true)};
- const change=(productId:string,variantId:string,quantity:number)=>commit(quantity<1?cart.filter(x=>!(x.productId===productId&&x.variantId===variantId)):cart.map(x=>x.productId===productId&&x.variantId===variantId?{...x,quantity}:x));
- const value={locale,setLocale,products,setProducts,cart,add,change,clear:()=>commit([]),cartCount:cart.reduce((n,x)=>n+x.quantity,0),cartOpen,setCartOpen,signedIn,setSignedIn};
- return <Context.Provider value={value}><MotionPreferences>{children}</MotionPreferences></Context.Provider>
+export function StoreProvider({children,initialProducts=seeds,signedIn=false}:{children:React.ReactNode;initialProducts?:Product[];signedIn?:boolean}){
+ const [locale,setLocaleState]=useState<Locale>("th"),[cart,setCart]=useState<CartLine[]>([]),[cartOpen,setCartOpen]=useState(false),[ready,setReady]=useState(false);
+ useEffect(()=>{
+  const timer=setTimeout(()=>{
+   try {
+    const savedLocale=localStorage.getItem("sw-locale");
+    if(savedLocale)setLocaleState(JSON.parse(savedLocale)==="en"?"en":"th");
+    const saved=JSON.parse(localStorage.getItem("sw-cart")||"[]");
+    if(Array.isArray(saved))setCart(saved.filter(l=>l&&typeof l.productId==="string"&&typeof l.variantId==="string"&&Number.isInteger(l.quantity)&&l.quantity>0&&l.quantity<=99));
+    localStorage.removeItem("sw-auth");
+   }catch{}setReady(true);
+  },0);
+  return()=>clearTimeout(timer);
+ },[]);
+ useEffect(()=>{if(ready)try{localStorage.setItem("sw-cart",JSON.stringify(cart))}catch{}},[cart,ready]);
+ const setLocale=(value:Locale)=>{setLocaleState(value);try{localStorage.setItem("sw-locale",JSON.stringify(value))}catch{}};
+ const stock=(p:string,v:string)=>initialProducts.find(x=>x.id===p)?.variants.find(x=>x.id===v)?.stock||0;
+ const add=(productId:string,variantId:string,quantity=1)=>{
+  const available=stock(productId,variantId);if(!available)return;
+  setCart(current=>{const found=current.find(l=>l.productId===productId&&l.variantId===variantId);const count=Math.min(99,available,(found?.quantity||0)+quantity);
+   return found?current.map(l=>l===found?{...l,quantity:count}:l):[...current,{productId,variantId,quantity:count}];
+  });setCartOpen(true);
+ };
+ const change=(p:string,v:string,q:number)=>setCart(current=>current.flatMap(l=>l.productId===p&&l.variantId===v?(q<1?[]:[{...l,quantity:Math.min(99,stock(p,v),q)}]):[l]).filter(l=>l.quantity>0));
+ const value={locale,setLocale,products:initialProducts,cart,add,change,clear:()=>setCart([]),cartCount:cart.reduce((n,l)=>n+l.quantity,0),cartOpen,setCartOpen,signedIn};
+ return <Context.Provider value={value}><MotionPreferences>{children}</MotionPreferences></Context.Provider>;
 }
-export const useStore=()=>{const v=useContext(Context);if(!v)throw new Error("StoreProvider missing");return v};
+export const useStore=()=>{const store=useContext(Context);if(!store)throw new Error("StoreProvider missing");return store};

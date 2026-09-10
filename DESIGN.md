@@ -2,11 +2,11 @@
 
 ## Direction
 
-A modern pink-and-white beauty campaign. Oversized sans-serif headlines, rounded photography, overlapping product notes, and generous white space give the soap collection a playful premium character. Clear prices and quick-add controls keep the collection easy to shop.
+Premium minimalism with an editorial, linear typography system. The storefront uses a quiet milk-white canvas, fine rules, asymmetric columns, rectangular image crops, and generous pauses. Pink and deep rose carry emphasis rather than decoration. Typography leads the composition; imagery gives the page its warmth.
 
 ## Typography
 
-Locally bundled Manrope and Noto Sans Thai support English and Thai without runtime font requests. Bold display text gives the campaign its graphic character. Body copy uses comfortable line spacing; small labels distinguish product details and navigation.
+Locally bundled Manrope and Noto Sans Thai support English and Thai without runtime font requests. Large headlines use tight editorial tracking and short line lengths. Small metadata uses restrained uppercase tracking. Body copy stays readable and conversational.
 
 ## Color and surfaces
 
@@ -18,16 +18,14 @@ Locally bundled Manrope and Noto Sans Thai support English and Thai without runt
 - Milk white: `#fffcfd`
 - Border: `#ecdfe4`
 
-Large rounded photo panels, pill buttons, circular arrow controls, and restrained shadows repeat throughout the storefront. The shop, product details, account, admin, and cart share the same typography, colors, and control styling.
+Rules, whitespace, and type establish structure. Rounded corners are reserved for image crops and primary controls. Surfaces stay flat and calm; elevation is used only when a floating control needs separation.
 
 ## Motion
 
-The hero combines a vertical photo reveal, gentle scroll parallax, and spring-smoothed pointer tilt. A moving brand ribbon leads into the collection. Product cards reveal over 1.15 seconds with a capped stagger; their images zoom gently on hover while arrows rotate and shopping prompts slide into view. The story photograph moves subtly with scrolling. Buttons, navigation, and the cart provide animated interaction feedback.
-
-Reveals begin in browser effects after hydration, keeping server HTML and the initial client render identical. Content stays visible if JavaScript is unavailable. The ribbon pauses outside the viewport or when the document is hidden. This storefront intentionally keeps its authored motion enabled for the full visual experience.
+The homepage has one continuous editorial rhythm: the hero image reveals with a soft wipe, the product collection enters with scroll reveal, and image movement stays subtle. Hover states lift cards and guide the eye without hiding essential actions. Content remains visible by default and reduced motion is respected.
 
 ## Local assets
 
-Photography lives in `public/hero-soap.png` and `public/product-soap.png`. Product photography is shared across the sample collection. Fonts live in `public/fonts`; adjacent OFL files contain their licenses. `scripts/download-fonts.mjs` can refresh the fonts from Google Fonts.
+Photography lives in `public/hero-soap.png` and `public/product-soap.png`. Product photography is shared across the sample collection. Fonts live in `public/fonts`; adjacent OFL files contain their licenses.
 
-All commerce behavior remains a local demo. This redesign does not connect payments, Supabase, deployment, or external email services.
+All commerce behavior remains a local demo while the Supabase-backed catalog, accounts, inventory, orders, and admin controls are available when the connection is healthy.
