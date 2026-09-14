@@ -1,8 +1,8 @@
 # Supabase integration
 
-This app is connected to project `kxiovludstuyleytrqdb`. The live catalog has six products and seven variants. The Supabase MCP migrations applied are `create_store_catalog`, `store_auth_storage_and_orders`, `atomic_admin_product_update`, and `consolidate_catalog_read_policies`.
+This app is connected to project `kxiovludstuyleytrqdb`. The live catalog has six products and seven variants. The store/auth/catalog migrations and [`supabase/stripe-payments.sql`](supabase/stripe-payments.sql) are applied, and `stripe-webhook` is deployed.
 
-The app now uses Supabase for the catalog, email/password Auth, profiles, Storage, admin product edits, and unpaid orders. Stripe or another payment gateway remains intentionally unconnected.
+The app uses Supabase for the catalog, email/password Auth, profiles, Storage, admin product edits, and orders. Stripe sandbox Checkout and signed paid-order webhooks are connected. See [README.md](README.md#stripe-sandbox-checkout).
 
 ## Auth setup
 
@@ -38,14 +38,17 @@ pnpm run dev
 - `src/app/auth/callback/route.ts` — email confirmation callback
 - `src/app/account/actions.ts` — sign-up, sign-in, password reset, profile address
 - `src/app/orders/actions.ts` — validated order placement and cancellation
+- `src/lib/stripe-checkout.ts` — server-only Stripe Session creation, retrieval, and expiration
 - `src/app/admin/actions.ts` — authorized product update
 - `supabase/store-auth-orders.sql` — applied database/RLS/function SQL
+- `supabase/stripe-payments.sql` — paid state, Stripe identifiers, idempotent webhook processor, expiration stock release
+- `supabase/functions/stripe-webhook/index.ts` — signature-verified Stripe event handler
 
-The order function calculates price from database rows, locks variants before decrementing stock, rejects overselling, and is idempotent by `request_id`. Checkout saves unpaid orders. Connect the payment gateway later and update order status only from a signed server webhook.
+The order function calculates price from database rows, locks variants before decrementing stock, rejects overselling, and is idempotent by `request_id`. Checkout saves an unpaid order, attaches one Stripe Session, and opens Stripe sandbox Checkout. The signed webhook validates order ownership, amount, currency, Session, and Stripe mode before marking it paid. Event IDs are recorded for idempotency. Expired Sessions restore reserved stock in deterministic lock order.
 
 ## Security model
 
-Products are public read-only data. Profiles and orders are visible only to their owner; admin can read orders and update catalog data. Product images are public to read but only the verified admin can upload, update, or delete. Service-role or secret keys are not used by this app.
+Products are public read-only data. Profiles and orders are visible only to their owner; admin can read orders and update catalog data. Product images are public to read but only the verified admin can upload, update, or delete. The browser and Next.js app never receive a Supabase service-role key. Supabase's Edge Function runtime supplies its server-only admin client for the narrowly granted webhook RPC. Stripe secrets are read only by server-side code.
 
 Run a read-only catalog check:
 
@@ -55,4 +58,4 @@ node --env-file=.env scripts/check-supabase.mjs
 
 Expected: `Supabase catalog: 6 products, 7 variants.` The security regression test is `tests/supabase-security.sql`; it was executed through the Supabase MCP and rolled back all fixtures successfully.
 
-The Supabase dashboard currently reports no security advisories. It reports one informational unused-index advisory for the order-items lookup index; it can remain until order volume makes its usage measurable.
+After the Stripe migration, the Supabase dashboard reports zero Security Advisor errors and zero Performance Advisor errors or warnings. Rollback-only live tests verified paid-state transitions, duplicate-event handling, expiration stock restoration, and service-role-only webhook permissions.

@@ -23,8 +23,8 @@ export function Header() {
     <header className={`header ${scrolled ? "header-scrolled" : ""}`}>
       <Link className="wordmark" href="/" aria-label="Sunshine Whitening home"><Sun/><span>sunshine<small>WHITENING</small></span></Link>
       <nav id="main-nav" className={open ? "nav nav-open" : "nav"}>
+        <Link className={path === "/" ? "active" : ""} href="/" onClick={() => setOpen(false)}>{th ? "หน้าหลัก" : "Home"}</Link>
         <Link className={path === "/shop" ? "active" : ""} href="/shop" onClick={() => setOpen(false)}>{th ? "เลือกซื้อ" : "Shop all"}</Link>
-        <Link href="/#story" onClick={() => setOpen(false)}>{th ? "เรื่องราวของเรา" : "Our world"}</Link>
         <Link href="/admin" onClick={() => setOpen(false)}>{th ? "จัดการร้าน" : "Studio admin"}</Link>
       </nav>
       <div className="header-actions">

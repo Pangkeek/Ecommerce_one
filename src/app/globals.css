@@ -207,14 +207,21 @@ h1,h2,h3 { text-wrap: balance; }
 .qty.large { margin: 0; min-height: 51px; }
 .qty.large button { width: 40px; height: 45px; }
 
-.scrim { position: fixed; inset: 0; z-index: 90; border: 0; background: #34222b55; opacity: 0; visibility: hidden; transition: opacity .35s, visibility .35s; }
-.scrim.show { opacity: 1; visibility: visible; }
-.drawer { position: fixed; right: 12px; top: 12px; bottom: 12px; z-index: 100; width: min(480px,calc(100% - 24px)); background: var(--milk); padding: 28px; border-radius: 23px; transform: translateX(calc(100% + 20px)); visibility: hidden; transition: transform .55s var(--ease), visibility .55s; display: flex; flex-direction: column; }
-.drawer.open { transform: none; visibility: visible; }
+.scrim { position: fixed; inset: 0; z-index: 90; border: 0; background: #34222b55; opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s; }
+.scrim.show, .scrim[data-state="open"] { opacity: 1; visibility: visible; transition-delay: 0s; animation: scrim-fade-in .3s ease both; }
+.scrim[data-state="closed"] { animation: none; }
+@keyframes scrim-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.drawer { position: fixed; right: 12px; top: 12px; bottom: 12px; z-index: 100; width: min(480px,calc(100% - 24px)); background: var(--milk); padding: 28px; border-radius: 23px; transform: translateX(calc(100% + 20px)); opacity: 0; visibility: hidden; pointer-events: none; transition: transform .5s var(--ease), opacity .25s ease, visibility 0s linear .5s; display: flex; flex-direction: column; }
+.drawer.open, .drawer[data-state="open"] { transform: translateX(0); opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; animation: drawer-slide-in .5s var(--ease) both; }
+@keyframes drawer-slide-in { from { opacity: 0; transform: translateX(calc(100% + 20px)); } to { opacity: 1; transform: translateX(0); } }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 22px; }
 .drawer h2 { font-size: 29px; font-weight: 600; letter-spacing: -.03em; margin: 3px 0; }
 .cart-lines { flex: 1; overflow: auto; padding: 15px 0; }
-.cart-line { display: grid; grid-template-columns: 90px 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.cart-line { display: grid; grid-template-columns: 90px 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--line); opacity: 0; transform: translateX(20px); }
+.drawer.open .cart-line, .drawer[data-state="open"] .cart-line { animation: cart-line-slide-in .42s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(130ms + (var(--cart-index) * 70ms)); }
+@keyframes cart-line-slide-in { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+.drawer.open .cart-total, .drawer[data-state="open"] .cart-total { animation: cart-total-arrive .35s cubic-bezier(.16,1,.3,1) both; animation-delay: 220ms; }
+@keyframes cart-total-arrive { from { opacity: .35; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .mini-product { height: 110px; border-radius: 10px; background: url("/product-soap.png") center/cover; }
 .cart-line h3 { font-size: 17px; margin: 0; }
 .cart-line p { font-size: 13px; color: var(--muted); margin: 0; }
@@ -231,6 +238,10 @@ h1,h2,h3 { text-wrap: balance; }
 .checkout { padding-top: 20px; display: flex; flex-direction: column; gap: 12px; overflow: auto; }
 .checkout h3 { font-size: 24px; margin: 12px 0; }
 .demo-note { padding: 14px; display: flex; align-items: center; gap: 10px; background: var(--blush); border-radius: 12px; font-size: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  .scrim, .drawer { transition: none; animation: none; }
+  .drawer[data-state="open"] .cart-line, .drawer[data-state="open"] .cart-total { animation: none; opacity: 1; transform: none; }
+}
 
 .auth-page { margin: 25px 4.6% 80px; border: 1px solid var(--line); border-radius: 28px; overflow: hidden; min-height: 640px; display: grid; grid-template-columns: 1fr 1fr; }
 .auth-art { background: var(--blush); display: flex; flex-direction: column; justify-content: center; align-items: center; }
