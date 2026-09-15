@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useStore } from "./store-provider";
 
-export function Header() {
+export function Header({ isAdmin = false }: { isAdmin?: boolean }) {
   const { locale, setLocale, cartCount, setCartOpen } = useStore();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [promotionOpen, setPromotionOpen] = useState(true);
   const path = usePathname();
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 32);
@@ -19,13 +20,13 @@ export function Header() {
   const th = locale === "th";
   return <>
     <a className="skip-link" href="#main-content">{th ? "ข้ามไปเนื้อหา" : "Skip to content"}</a>
-    <div className="announcement"><Sun size={14}/><span>{th ? "เติมความสุขให้ทุกวัน · จัดส่งฟรีเมื่อครบ ฿1,000" : "A little joy, delivered. Free shipping on orders ฿1,000+"}</span><ArrowUpRight size={14}/></div>
+    {promotionOpen && <div className="announcement"><Sun size={14} aria-hidden="true"/><span>{th ? "เติมความสุขให้ทุกวัน · จัดส่งฟรีเมื่อครบ ฿1,000" : "A little joy, delivered. Free shipping on orders ฿1,000+"}</span><ArrowUpRight size={14} aria-hidden="true"/><button type="button" className="announcement-close" aria-label={th ? "ปิดแถบโปรโมชั่น" : "Close promotion"} onClick={() => setPromotionOpen(false)}><X aria-hidden="true"/></button></div>}
     <header className={`header ${scrolled ? "header-scrolled" : ""}`}>
       <Link className="wordmark" href="/" aria-label="Sunshine Whitening home"><Sun/><span>sunshine<small>WHITENING</small></span></Link>
       <nav id="main-nav" className={open ? "nav nav-open" : "nav"}>
         <Link className={path === "/" ? "active" : ""} href="/" onClick={() => setOpen(false)}>{th ? "หน้าหลัก" : "Home"}</Link>
         <Link className={path === "/shop" ? "active" : ""} href="/shop" onClick={() => setOpen(false)}>{th ? "เลือกซื้อ" : "Shop all"}</Link>
-        <Link href="/admin" onClick={() => setOpen(false)}>{th ? "จัดการร้าน" : "Studio admin"}</Link>
+        {isAdmin && <Link className={path === "/admin" ? "active" : ""} href="/admin" onClick={() => setOpen(false)}>{th ? "จัดการร้าน" : "Studio admin"}</Link>}
       </nav>
       <div className="header-actions">
         <button className="locale" onClick={() => setLocale(th ? "en" : "th")}>{th ? "EN" : "TH"}</button>

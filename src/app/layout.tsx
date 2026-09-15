@@ -9,5 +9,7 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
  const initialProducts=connected?await getCatalog().catch(()=>undefined):undefined;
  const supabase=await createServerSupabase();
  const {data:{user}}=await supabase.auth.getUser();
- return <html lang="th"><body><StoreProvider initialProducts={initialProducts} signedIn={!!user}><Header/><main id="main-content">{children}</main><Footer/><CartDrawer/></StoreProvider></body></html>
+ const admin = user ? await supabase.rpc("is_store_admin") : null;
+ const isAdmin = !!user && !admin?.error && admin?.data === true;
+ return <html lang="th"><body><StoreProvider initialProducts={initialProducts} signedIn={!!user}><Header isAdmin={isAdmin}/><main id="main-content">{children}</main><Footer isAdmin={isAdmin}/><CartDrawer/></StoreProvider></body></html>
 }
